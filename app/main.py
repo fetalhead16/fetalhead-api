@@ -16,6 +16,8 @@ from app.services.analysis import analyzer
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 REGISTRATION_FILE = DATA_DIR / "registrations.jsonl"
+ASSET_FILES = [BASE_DIR / "static" / "css" / "styles.css", BASE_DIR / "static" / "js" / "app.js"]
+ASSET_VERSION = str(max(int(path.stat().st_mtime) for path in ASSET_FILES if path.exists()))
 
 app = FastAPI(
     title="Fetal Head Biometrics App",
@@ -29,7 +31,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "asset_version": ASSET_VERSION})
 
 
 @app.get("/api/health")

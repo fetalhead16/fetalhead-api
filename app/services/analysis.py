@@ -32,6 +32,8 @@ class LoadedImage:
 
 
 class UltrasoundAnalyzer:
+    IMAGE_ABNORMAL_THRESHOLD = 0.70
+
     def __init__(self) -> None:
         project_root = Path(__file__).resolve().parents[2]
         self.model_dir = project_root / "models"
@@ -86,7 +88,7 @@ class UltrasoundAnalyzer:
             quality=quality,
             gestational_age_weeks=gestational_age_weeks,
             absolute_measurements=loaded.pixel_spacing_mm is not None,
-            source_frame=preprocessed,
+            source_frame=loaded.grayscale,
         )
         previews = self._build_previews(loaded.rgb, preprocessed, contour, ellipse)
 
@@ -351,7 +353,8 @@ class UltrasoundAnalyzer:
             if image_features is not None:
                 features = image_features.reshape(1, -1)
                 features = self.image_scaler.transform(features) if self.image_scaler is not None else features
-                prediction = int(self.image_classifier.predict(features)[0])
+                abnormal_probability = float(self.image_classifier.predict_proba(features)[0][1])
+                prediction = int(abnormal_probability >= self.IMAGE_ABNORMAL_THRESHOLD)
                 return {
                     "classifier_mode": "image_random_forest",
                     "status": "abnormal" if prediction == 1 else "normal",
@@ -360,6 +363,7 @@ class UltrasoundAnalyzer:
                     else "Image classifier suggests a normal pattern.",
                     "notes": [
                         "Trained image Random Forest weights were loaded from the local models directory.",
+                        f"Abnormality probability: {abnormal_probability:.2f}.",
                         "Use this output as a screening aid, not a clinical diagnosis.",
                     ],
                 }

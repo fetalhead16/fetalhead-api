@@ -43,6 +43,10 @@ img {
   max-width: 100%;
 }
 
+.is-hidden {
+  display: none !important;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -568,6 +572,11 @@ button:disabled {
 
 .summary-text {
   margin: 0;
+}
+
+.results-block {
+  display: grid;
+  gap: 18px;
 }
 
 .metrics-grid {

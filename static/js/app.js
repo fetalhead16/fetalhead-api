@@ -35,6 +35,16 @@ function setRegistrationStatus(message) {
   registrationStatus.textContent = message;
 }
 
+function showElement(element) {
+  element.hidden = false;
+  element.classList.remove("is-hidden");
+}
+
+function hideElement(element) {
+  element.hidden = true;
+  element.classList.add("is-hidden");
+}
+
 function uniqueNotes(notes) {
   return [...new Set(notes.filter(Boolean))];
 }
@@ -42,23 +52,23 @@ function uniqueNotes(notes) {
 function updateSelectedFile() {
   const [file] = fileInput.files;
   if (!file) {
-    selectedFile.hidden = true;
-    localPreview.hidden = true;
+    hideElement(selectedFile);
+    hideElement(localPreview);
     return;
   }
 
-  selectedFile.hidden = false;
+  showElement(selectedFile);
   selectedFile.textContent = `${file.name} - ${(file.size / 1024 / 1024).toFixed(2)} MB`;
 
   if (file.type.startsWith("image/")) {
     const reader = new FileReader();
     reader.onload = () => {
       localPreview.src = reader.result;
-      localPreview.hidden = false;
+      showElement(localPreview);
     };
     reader.readAsDataURL(file);
   } else {
-    localPreview.hidden = true;
+    hideElement(localPreview);
   }
 }
 
@@ -97,8 +107,8 @@ function getCondition(status) {
 }
 
 function renderResult(data) {
-  emptyState.hidden = true;
-  resultsBlock.hidden = false;
+  hideElement(emptyState);
+  showElement(resultsBlock);
 
   renderMetrics(data.measurements);
   renderNotes([...data.assessment.notes, ...data.notes]);
@@ -125,6 +135,10 @@ function renderResult(data) {
   } else {
     setStatus("Analysis complete.", "ok");
   }
+
+  requestAnimationFrame(() => {
+    resultsBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 async function submitForm(event) {
@@ -158,8 +172,8 @@ async function submitForm(event) {
 
     renderResult(payload);
   } catch (error) {
-    emptyState.hidden = false;
-    resultsBlock.hidden = true;
+    showElement(emptyState);
+    hideElement(resultsBlock);
     setStatus(error.message, "bad");
   } finally {
     analyzeButton.disabled = false;
@@ -284,3 +298,6 @@ registrationForm.addEventListener("submit", submitRegistration);
 setupRevealAnimations();
 setupCounters();
 setupNavigation();
+hideElement(selectedFile);
+hideElement(localPreview);
+hideElement(resultsBlock);
