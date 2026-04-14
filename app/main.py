@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -8,10 +10,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.schemas import AnalysisResponse
+from app.schemas import AnalysisResponse, RegistrationRequest, RegistrationResponse
 from app.services.analysis import analyzer
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+REGISTRATION_FILE = DATA_DIR / "registrations.jsonl"
 
 app = FastAPI(
     title="Fetal Head Biometrics App",
@@ -31,6 +35,35 @@ async def index(request: Request) -> HTMLResponse:
 @app.get("/api/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/api/register", response_model=RegistrationResponse)
+async def register_interest(payload: RegistrationRequest) -> RegistrationResponse:
+    name = payload.name.strip()
+    email = payload.email.strip()
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required.")
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with REGISTRATION_FILE.open("a", encoding="utf-8") as handle:
+        handle.write(
+            json.dumps(
+                {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "name": name,
+                    "email": email,
+                    "college": (payload.college or "").strip(),
+                    "role": (payload.role or "").strip(),
+                    "message": (payload.message or "").strip(),
+                }
+            )
+        )
+        handle.write("\n")
+
+    return RegistrationResponse(success=True, message="Registration saved successfully.")
 
 
 @app.post("/api/analyze", response_model=AnalysisResponse)

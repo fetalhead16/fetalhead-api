@@ -19,6 +19,10 @@ const assessmentText = document.getElementById("assessment-text");
 const overlayPreview = document.getElementById("overlay-preview");
 const maskPreview = document.getElementById("mask-preview");
 const preprocessedPreview = document.getElementById("preprocessed-preview");
+const registrationForm = document.getElementById("registration-form");
+const registrationStatus = document.getElementById("registration-status");
+const navToggle = document.getElementById("nav-toggle");
+const siteNav = document.getElementById("site-nav");
 
 const numberFormatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 2,
@@ -30,6 +34,14 @@ function setStatus(message, tone = "neutral") {
   statusChip.textContent = tone === "neutral" ? "Idle" : tone === "ok" ? "Ready" : tone === "warn" ? "Review" : "Issue";
 }
 
+function setRegistrationStatus(message) {
+  registrationStatus.textContent = message;
+}
+
+function uniqueNotes(notes) {
+  return [...new Set(notes.filter(Boolean))];
+}
+
 function updateSelectedFile() {
   const [file] = fileInput.files;
   if (!file) {
@@ -39,7 +51,7 @@ function updateSelectedFile() {
   }
 
   selectedFile.hidden = false;
-  selectedFile.textContent = `${file.name} • ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+  selectedFile.textContent = `${file.name} - ${(file.size / 1024 / 1024).toFixed(2)} MB`;
 
   if (file.type.startsWith("image/")) {
     const reader = new FileReader();
@@ -80,7 +92,7 @@ function renderMetrics(measurements) {
 }
 
 function renderNotes(notes) {
-  notesList.innerHTML = notes.map((note) => `<li>${note}</li>`).join("");
+  notesList.innerHTML = uniqueNotes(notes).map((note) => `<li>${note}</li>`).join("");
 }
 
 function renderResult(data) {
@@ -97,7 +109,7 @@ function renderResult(data) {
       "Pixel spacing",
       data.calibration.pixel_spacing_mm == null ? "Not available" : `${numberFormatter.format(data.calibration.pixel_spacing_mm)} mm/pixel`,
     ],
-    ["Image size", `${data.image_size[0]} × ${data.image_size[1]}`],
+    ["Image size", `${data.image_size[0]} x ${data.image_size[1]}`],
   ]);
 
   renderStackItems(qualityList, [
@@ -114,8 +126,8 @@ function renderResult(data) {
   maskPreview.src = data.previews.mask;
   preprocessedPreview.src = data.previews.preprocessed;
 
-  if (data.assessment.status === "review_recommended" || data.assessment.status === "abnormal") {
-    setStatus("Analysis complete. The output suggests the scan should be reviewed carefully.", "warn");
+  if (["review_recommended", "abnormal", "invalid_plane"].includes(data.assessment.status)) {
+    setStatus("Analysis complete. Review the overlay and input plane carefully.", "warn");
   } else if (data.assessment.status === "low_confidence") {
     setStatus("Analysis complete, but contour confidence is low.", "bad");
   } else {
@@ -165,8 +177,112 @@ async function submitForm(event) {
   }
 }
 
+async function submitRegistration(event) {
+  event.preventDefault();
+  const formData = new FormData(registrationForm);
+  const payload = Object.fromEntries(formData.entries());
+
+  setRegistrationStatus("Submitting registration...");
+
+  try {
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await response.json();
+    if (!response.ok) {
+      throw new Error(body.detail || "Registration failed.");
+    }
+
+    registrationForm.reset();
+    setRegistrationStatus(body.message);
+  } catch (error) {
+    setRegistrationStatus(error.message);
+  }
+}
+
+function setupRevealAnimations() {
+  const sections = document.querySelectorAll(".reveal");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+        }
+      });
+    },
+    { threshold: 0.16 },
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
+function setupCounters() {
+  const counters = document.querySelectorAll("[data-count]");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        const target = Number(entry.target.dataset.count || 0);
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 24));
+        const interval = setInterval(() => {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(interval);
+          }
+          entry.target.textContent = `${current}`;
+        }, 40);
+
+        observer.unobserve(entry.target);
+      });
+    },
+    { threshold: 0.45 },
+  );
+
+  counters.forEach((counter) => observer.observe(counter));
+}
+
+function setupNavigation() {
+  navToggle.addEventListener("click", () => {
+    siteNav.classList.toggle("is-open");
+  });
+
+  siteNav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => siteNav.classList.remove("is-open"));
+  });
+
+  const sections = document.querySelectorAll("main section[id]");
+  const navLinks = [...siteNav.querySelectorAll("a")];
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        navLinks.forEach((link) => {
+          link.classList.toggle("is-active", link.getAttribute("href") === `#${entry.target.id}`);
+        });
+      });
+    },
+    { threshold: 0.45 },
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
 fileInput.addEventListener("change", updateSelectedFile);
 form.addEventListener("submit", submitForm);
+registrationForm.addEventListener("submit", submitRegistration);
 
 ["dragenter", "dragover"].forEach((eventName) => {
   dropzone.addEventListener(eventName, () => dropzone.classList.add("is-dragging"));
@@ -175,3 +291,7 @@ form.addEventListener("submit", submitForm);
 ["dragleave", "drop"].forEach((eventName) => {
   dropzone.addEventListener(eventName, () => dropzone.classList.remove("is-dragging"));
 });
+
+setupRevealAnimations();
+setupCounters();
+setupNavigation();

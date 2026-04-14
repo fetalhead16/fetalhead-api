@@ -47,3 +47,16 @@ class AnalysisResponse(BaseModel):
     assessment: AssessmentModel
     notes: List[str]
     previews: PreviewModel
+
+
+class RegistrationRequest(BaseModel):
+    name: str
+    email: str
+    college: Optional[str] = None
+    role: Optional[str] = None
+    message: Optional[str] = None
+
+
+class RegistrationResponse(BaseModel):
+    success: bool
+    message: str

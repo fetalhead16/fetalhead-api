@@ -67,6 +67,11 @@ class UltrasoundAnalyzer:
                 "The app could not isolate a fetal head outline from this image. Try a clearer frame or upload a DICOM scan."
             )
 
+        if quality["confidence"] < 0.48:
+            raise ValueError(
+                "This frame does not resemble a reliable fetal head measurement plane. Please upload a clearer fetal head cross-section."
+            )
+
         measurements = self._calculate_measurements(ellipse, loaded.pixel_spacing_mm)
         assessment = self._build_assessment(
             measurements=measurements,
@@ -85,6 +90,7 @@ class UltrasoundAnalyzer:
             notes.append(
                 "Gestational age was not provided, so the app did not attempt age-normalized abnormality screening."
             )
+        notes = self._unique_notes(notes)
 
         height, width = loaded.grayscale.shape
         return {
@@ -238,7 +244,7 @@ class UltrasoundAnalyzer:
         image_area = float(image_height * image_width)
         contour_area = float(cv2.contourArea(contour))
         relative_area = contour_area / image_area
-        if relative_area < 0.02 or relative_area > 0.85:
+        if relative_area < 0.025 or relative_area > 0.50:
             return -1.0, None, fallback
 
         ellipse = cv2.fitEllipse(contour)
@@ -252,23 +258,37 @@ class UltrasoundAnalyzer:
         if axis_ratio < 0.35 or axis_ratio > 1.0:
             return -1.0, None, fallback
 
+        min_dimension = float(min(image_width, image_height))
+        if major_axis > min_dimension * 0.92:
+            return -1.0, None, fallback
+
         ellipse_area = math.pi * (major_axis / 2.0) * (minor_axis / 2.0)
+        ellipse_coverage = ellipse_area / image_area
+        if ellipse_coverage > 0.42:
+            return -1.0, None, fallback
+
+        border_contact_ratio = self._border_contact_ratio(contour, image_width, image_height)
+        if border_contact_ratio > 0.08:
+            return -1.0, None, fallback
+
         fit_score = min(contour_area, ellipse_area) / max(contour_area, ellipse_area)
         center_offset_px = float(np.hypot(cx - (image_width / 2.0), cy - (image_height / 2.0)))
         max_center_offset = float(np.hypot(image_width / 2.0, image_height / 2.0))
         center_score = 1.0 - min(center_offset_px / max_center_offset, 1.0)
-        size_score = 1.0 if 0.08 <= relative_area <= 0.60 else 0.65
+        size_score = 1.0 if 0.07 <= relative_area <= 0.34 else 0.6
         edge_margin = min(
             cx - (major_axis / 2.0),
             cy - (minor_axis / 2.0),
             image_width - (cx + (major_axis / 2.0)),
             image_height - (cy + (minor_axis / 2.0)),
         )
-        margin_score = 1.0 if edge_margin > min(image_width, image_height) * 0.04 else 0.55
+        if edge_margin < min_dimension * 0.018:
+            return -1.0, None, fallback
+        margin_score = 1.0 if edge_margin > min_dimension * 0.05 else 0.55
 
         confidence = float(
             np.clip(
-                (0.45 * fit_score) + (0.25 * center_score) + (0.20 * axis_ratio) + (0.10 * size_score * margin_score),
+                (0.45 * fit_score) + (0.25 * center_score) + (0.18 * axis_ratio) + (0.12 * size_score * margin_score),
                 0.0,
                 1.0,
             )
@@ -293,7 +313,7 @@ class UltrasoundAnalyzer:
 
         scale = pixel_spacing_mm if pixel_spacing_mm is not None else 1.0
         length_unit = "mm" if pixel_spacing_mm is not None else "px"
-        area_unit = "mm²" if pixel_spacing_mm is not None else "px²"
+        area_unit = "mm2" if pixel_spacing_mm is not None else "px2"
 
         ofd = 2.0 * semi_major * scale
         bpd = 2.0 * semi_minor * scale
@@ -342,24 +362,20 @@ class UltrasoundAnalyzer:
 
         ci_value = measurements["ci"]["value"]
         notes = [
-            "No trained Random Forest weights were found, so the app used a shape heuristic instead of the paper's classifier."
+            "No trained Random Forest weights were found, so the live deployment used a geometric fallback instead of the paper's classifier."
         ]
-        if not absolute_measurements:
-            notes.append("Because calibration is missing, only shape-based screening is considered reliable in this demo mode.")
-        if gestational_age_weeks is None:
-            notes.append("Gestational age was not supplied, so microcephaly and macrocephaly checks were skipped.")
         if quality["confidence"] < 0.55:
             notes.append("Segmentation confidence is low. Review the overlay before trusting the measurements.")
 
-        if ci_value < 74.0:
+        if quality["confidence"] < 0.58:
+            status = "invalid_plane"
+            summary = "This frame does not resemble a standard fetal head plane strongly enough for reliable biometric use."
+        elif ci_value < 74.0:
             status = "review_recommended"
             summary = "The cephalic index is lower than the demo range, so a review is recommended."
         elif ci_value > 85.0:
             status = "review_recommended"
             summary = "The cephalic index is higher than the demo range, so a review is recommended."
-        elif quality["confidence"] < 0.55:
-            status = "low_confidence"
-            summary = "The shape looks plausible, but the contour confidence is low."
         else:
             status = "no_shape_flag"
             summary = "No obvious shape anomaly was flagged by the demo heuristic."
@@ -368,7 +384,7 @@ class UltrasoundAnalyzer:
             "classifier_mode": "heuristic_demo",
             "status": status,
             "summary": summary,
-            "notes": notes,
+            "notes": self._unique_notes(notes),
         }
 
     def _build_previews(
@@ -411,6 +427,26 @@ class UltrasoundAnalyzer:
             return np.zeros_like(pixels, dtype=np.uint8)
         normalized = (pixels - min_value) / (max_value - min_value)
         return np.clip(normalized * 255.0, 0, 255).astype(np.uint8)
+
+    def _border_contact_ratio(self, contour: np.ndarray, image_width: int, image_height: int) -> float:
+        margin = max(8, int(min(image_width, image_height) * 0.025))
+        points = contour.reshape(-1, 2)
+        contact = (
+            (points[:, 0] <= margin)
+            | (points[:, 1] <= margin)
+            | (points[:, 0] >= image_width - margin)
+            | (points[:, 1] >= image_height - margin)
+        )
+        return float(np.mean(contact))
+
+    def _unique_notes(self, notes: list[str]) -> list[str]:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for note in notes:
+            if note and note not in seen:
+                seen.add(note)
+                ordered.append(note)
+        return ordered
 
 
 analyzer = UltrasoundAnalyzer()
