@@ -9,8 +9,14 @@ The live website does not automatically download these datasets.
 
 To move from demo mode to a trained pipeline, add cleaned exports here, for example:
 
-- `datasets/kaggle_fetal_ultrasound_images/`
-- `datasets/roboflow_fetal_brain_abnormalities/`
+- `datasets/raw/kaggle_fetal_head/`
+- `datasets/raw/roboflow_fetal_brain/`
+
+Expected structure (example):
+
+- `datasets/raw/kaggle_fetal_head/images/`
+- `datasets/raw/kaggle_fetal_head/masks/`
+- `datasets/labels/labels.csv` (image,label)
 
 Next training tasks:
 
@@ -20,3 +26,11 @@ Next training tasks:
 4. Extract biometric features
 5. Train and export `random_forest.joblib`
 6. Export `feature_scaler.joblib`
+
+Quick commands once data is available:
+
+```bash
+python scripts/prepare_datasets.py
+python scripts/extract_biometry_features.py --images-dir datasets/raw/kaggle_fetal_head/images --masks-dir datasets/raw/kaggle_fetal_head/masks
+python scripts/train_random_forest.py --features datasets/processed/biometry_features.csv --labels datasets/labels/labels.csv
+```
