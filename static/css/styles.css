@@ -188,10 +188,8 @@ button:hover {
 
 .hero-copy-card,
 .floating-card,
-.registration-copy-card,
 .registration-form,
 .panel,
-.dataset-card,
 .team-card {
   border: 1px solid rgba(255, 255, 255, 0.78);
   background: var(--surface);
@@ -341,48 +339,24 @@ button:hover {
   margin-top: 10px;
 }
 
-.dataset-grid,
 .team-grid {
   display: grid;
   gap: 16px;
 }
 
-.dataset-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.dataset-card {
-  border-radius: var(--radius-lg);
-  padding: 26px;
-}
-
-.dataset-card.emphasis {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(240, 142, 84, 0.14));
-}
-
-.pill {
-  background: rgba(32, 41, 52, 0.08);
-  color: #3a4c59;
-  font-size: 0.82rem;
-}
-
 .registration-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1fr);
   gap: 18px;
 }
 
-.registration-copy-card,
 .registration-form {
   border-radius: var(--radius-lg);
   padding: 26px;
 }
 
-.feature-list {
-  margin: 18px 0;
-  padding-left: 20px;
-  display: grid;
-  gap: 10px;
+.compact-form-layout {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .registration-form {
@@ -502,7 +476,7 @@ button:hover {
 
 .field-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 14px;
   margin-top: 18px;
 }
@@ -605,7 +579,6 @@ button:disabled {
 
 .metric-card,
 .info-card,
-.notes-card,
 .image-card {
   padding: 20px;
   border-radius: 20px;
@@ -632,7 +605,7 @@ button:disabled {
 
 .info-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 14px;
   margin-top: 18px;
 }
@@ -684,17 +657,6 @@ button:disabled {
   color: var(--muted);
 }
 
-.notes-card {
-  margin-top: 18px;
-}
-
-.notes-card ul {
-  margin: 14px 0 0;
-  padding-left: 20px;
-  display: grid;
-  gap: 8px;
-}
-
 .site-footer {
   width: min(1320px, calc(100vw - 24px));
   margin: 0 auto 36px;
@@ -727,12 +689,7 @@ button:disabled {
 
 @media (max-width: 1080px) {
   .hero-section,
-  .registration-layout,
   .analyzer-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .dataset-grid {
     grid-template-columns: 1fr;
   }
 
@@ -791,10 +748,8 @@ button:disabled {
 
   .hero-copy-card,
   .floating-card,
-  .registration-copy-card,
   .registration-form,
   .panel,
-  .dataset-card,
   .team-card,
   .site-footer {
     padding: 20px;

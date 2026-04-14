@@ -1,6 +1,5 @@
 const form = document.getElementById("analysis-form");
 const fileInput = document.getElementById("image");
-const pixelSpacingInput = document.getElementById("pixel_spacing_mm");
 const gestationalAgeInput = document.getElementById("gestational_age_weeks");
 const dropzone = document.querySelector(".dropzone");
 const analyzeButton = document.getElementById("analyze-button");
@@ -11,9 +10,7 @@ const statusChip = document.getElementById("status-chip");
 const emptyState = document.getElementById("empty-state");
 const resultsBlock = document.getElementById("results-block");
 const metricsGrid = document.getElementById("metrics-grid");
-const calibrationList = document.getElementById("calibration-list");
 const qualityList = document.getElementById("quality-list");
-const notesList = document.getElementById("notes-list");
 const assessmentTitle = document.getElementById("assessment-title");
 const assessmentText = document.getElementById("assessment-text");
 const overlayPreview = document.getElementById("overlay-preview");
@@ -92,7 +89,11 @@ function renderMetrics(measurements) {
 }
 
 function renderNotes(notes) {
-  notesList.innerHTML = uniqueNotes(notes).map((note) => `<li>${note}</li>`).join("");
+  return uniqueNotes(notes);
+}
+
+function getCondition(status) {
+  return ["normal", "no_shape_flag"].includes(status) ? "Normal" : "Abnormal";
 }
 
 function renderResult(data) {
@@ -102,17 +103,8 @@ function renderResult(data) {
   renderMetrics(data.measurements);
   renderNotes([...data.assessment.notes, ...data.notes]);
 
-  renderStackItems(calibrationList, [
-    ["Source", data.calibration.source],
-    ["Absolute values", data.calibration.absolute_measurements ? "Yes" : "No"],
-    [
-      "Pixel spacing",
-      data.calibration.pixel_spacing_mm == null ? "Not available" : `${numberFormatter.format(data.calibration.pixel_spacing_mm)} mm/pixel`,
-    ],
-    ["Image size", `${data.image_size[0]} x ${data.image_size[1]}`],
-  ]);
-
   renderStackItems(qualityList, [
+    ["Condition", getCondition(data.assessment.status)],
     ["Confidence", numberFormatter.format(data.quality.confidence)],
     ["Fit score", numberFormatter.format(data.quality.fit_score)],
     ["Contour points", `${data.quality.contour_points}`],
@@ -120,7 +112,7 @@ function renderResult(data) {
   ]);
 
   assessmentTitle.textContent = data.assessment.summary;
-  assessmentText.textContent = `Mode: ${data.assessment.classifier_mode}. Status: ${data.assessment.status}.`;
+  assessmentText.textContent = `Condition: ${getCondition(data.assessment.status)}.`;
 
   overlayPreview.src = data.previews.overlay;
   maskPreview.src = data.previews.mask;
@@ -149,9 +141,6 @@ async function submitForm(event) {
   const formData = new FormData();
   formData.append("image", fileInput.files[0]);
 
-  if (pixelSpacingInput.value) {
-    formData.append("pixel_spacing_mm", pixelSpacingInput.value);
-  }
   if (gestationalAgeInput.value) {
     formData.append("gestational_age_weeks", gestationalAgeInput.value);
   }

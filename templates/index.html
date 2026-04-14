@@ -22,8 +22,8 @@
         <nav id="site-nav" class="site-nav">
           <a href="#home">Home</a>
           <a href="#registration">Registration Form</a>
-          <a href="#team">Team</a>
           <a href="#upload">Upload Image</a>
+          <a href="#team">Team</a>
         </nav>
 
         <a class="nav-cta" href="#upload">Open Analyzer</a>
@@ -64,98 +64,30 @@
         </div>
 
         <aside class="hero-side">
-          <article class="floating-card pipeline-card">
-            <div class="card-tag">Pipeline</div>
-            <ol>
-              <li>Upload ultrasound image or DICOM</li>
-              <li>Preprocess and isolate a head-like contour</li>
-              <li>Fit ellipse and compute biometrics</li>
-              <li>Return visual overlays and screening notes</li>
-            </ol>
-          </article>
-
           <article class="floating-card status-card">
-            <div class="card-tag">Model status</div>
-            <h2>Live website, training artifacts pending.</h2>
+            <div class="card-tag">Project Info</div>
+            <h2>Fetal head parameter extraction and abnormality detection from ultrasound images.</h2>
             <p>
-              The current deployment is online and interactive. Dataset-backed training can be added next once the Kaggle and
-              Roboflow exports are downloaded and the final weights are trained.
+              This project presents a live web interface for fetal head biometric analysis and screening from ultrasound images,
+              built around the academic project theme and deployed for interactive use.
             </p>
             <ul class="mini-list">
+              <li>Dhanekula Institute of Engineering and Technology</li>
               <li>Kaggle: Fetal ultrasound images</li>
               <li>Roboflow: Fetal brain abnormalities</li>
-              <li>Random Forest weights: not added yet</li>
+              <li>Outputs: HC, BPD, OFD, CI, and HA</li>
             </ul>
           </article>
         </aside>
       </section>
 
-      <section class="section reveal">
-        <div class="section-heading">
-          <p class="section-kicker">Project status</p>
-          <h2>Website structure with clearer scope, dataset transparency, and safer analyzer behavior.</h2>
-          <p>
-            The interface below is organized like a proper project website: a landing section, registration area, team section,
-            and upload workspace. The model status is stated clearly so visitors understand when the app is running in demo mode.
-          </p>
-        </div>
-
-        <div class="dataset-grid">
-          <article class="dataset-card">
-            <span class="pill">Dataset source 01</span>
-            <h3>Kaggle fetal ultrasound images</h3>
-            <p>
-              Intended for curated ultrasound inputs and head-plane examples. This dataset should feed preprocessing experiments,
-              segmentation review, and validation samples.
-            </p>
-          </article>
-
-          <article class="dataset-card">
-            <span class="pill">Dataset source 02</span>
-            <h3>Roboflow fetal brain abnormalities</h3>
-            <p>
-              Intended for annotated abnormality references and future supervised training. Exporting labels from here is the next
-              step toward a true dataset-backed model pipeline.
-            </p>
-          </article>
-
-          <article class="dataset-card emphasis">
-            <span class="pill">Deployment note</span>
-            <h3>Random Forest weights are not magic files.</h3>
-            <p>
-              They need to be trained from cleaned biometric features and labeled outcomes. Until the trained files are added to
-              the deployment, the app uses a geometric fallback and labels that mode honestly.
-            </p>
-          </article>
-        </div>
-      </section>
-
       <section id="registration" class="section registration-section reveal">
         <div class="section-heading compact">
-          <p class="section-kicker">Registration Form</p>
-          <h2>Collect interest, demo requests, or academic collaborators.</h2>
-          <p>
-            This section mirrors the structure you wanted from the live site. It gives the project a proper landing page flow
-            before visitors reach the analyzer.
-          </p>
+          <h2>Registration Form</h2>
         </div>
 
-        <div class="registration-layout">
-          <article class="registration-copy-card">
-            <h3>What this section is for</h3>
-            <ul class="feature-list">
-              <li>Student demo requests</li>
-              <li>Faculty or clinician interest collection</li>
-              <li>Project collaboration enquiries</li>
-              <li>Future participant signups</li>
-            </ul>
-            <p class="registration-note">
-              On the free Render deployment, registration storage is lightweight and best suited for demos. A durable database can
-              be added later if you want production-grade submissions.
-            </p>
-          </article>
-
-          <form id="registration-form" class="registration-form">
+        <div class="registration-layout compact-form-layout">
+          <form id="registration-form" class="registration-form single-card-form">
             <label class="field">
               <span>Name</span>
               <input id="register_name" name="name" type="text" placeholder="Enter full name" required />
@@ -187,48 +119,10 @@
         </div>
       </section>
 
-      <section id="team" class="section reveal">
-        <div class="section-heading compact">
-          <p class="section-kicker">Team</p>
-          <h2>The current project contributors featured on the site.</h2>
-          <p>
-            The extra menu item you showed has been dropped from this structure. This section keeps only the remaining project
-            contributors in a cleaner presentation.
-          </p>
-        </div>
-
-        <div class="team-grid">
-          <article class="team-card">
-            <h3>Mr. Ravikanth Mishra</h3>
-            <p>Project mentor and academic guide.</p>
-          </article>
-          <article class="team-card">
-            <h3>Sravya Bolla</h3>
-            <p>Core project contributor.</p>
-          </article>
-          <article class="team-card">
-            <h3>Sahithya Alladi</h3>
-            <p>Core project contributor.</p>
-          </article>
-          <article class="team-card">
-            <h3>Durga Bhavani Mareedu</h3>
-            <p>Core project contributor.</p>
-          </article>
-          <article class="team-card">
-            <h3>James Chepala</h3>
-            <p>Core project contributor and deployment owner.</p>
-          </article>
-        </div>
-      </section>
-
       <section id="upload" class="section analyzer-section reveal">
         <div class="section-heading compact">
           <p class="section-kicker">Upload Image</p>
           <h2>Interactive analysis workspace</h2>
-          <p>
-            Upload a dedicated fetal head plane for the best result. The analyzer now warns more aggressively when a frame looks
-            like a general pregnancy scan instead of a valid fetal head measurement plane.
-          </p>
         </div>
 
         <div class="analyzer-layout">
@@ -252,17 +146,6 @@
 
               <div class="field-grid">
                 <label class="field">
-                  <span>Pixel spacing (mm/pixel)</span>
-                  <input
-                    id="pixel_spacing_mm"
-                    name="pixel_spacing_mm"
-                    type="number"
-                    step="0.0001"
-                    min="0"
-                    placeholder="Optional for JPG/PNG"
-                  />
-                </label>
-                <label class="field">
                   <span>Gestational age (weeks)</span>
                   <input
                     id="gestational_age_weeks"
@@ -278,10 +161,6 @@
 
               <div class="cta-row">
                 <button id="analyze-button" class="button-primary" type="submit">Analyze Image</button>
-                <p class="inline-note">
-                  DICOM files can auto-read pixel spacing. Standard images usually need manual calibration for true millimeter
-                  values.
-                </p>
               </div>
             </form>
 
@@ -313,10 +192,6 @@
 
               <section class="info-grid">
                 <article class="info-card">
-                  <h3>Calibration</h3>
-                  <div id="calibration-list" class="stack-list"></div>
-                </article>
-                <article class="info-card">
                   <h3>Quality</h3>
                   <div id="quality-list" class="stack-list"></div>
                 </article>
@@ -336,22 +211,45 @@
                   <figcaption>Preprocessed ultrasound frame</figcaption>
                 </figure>
               </section>
-
-              <section class="notes-card">
-                <h3>Notes</h3>
-                <ul id="notes-list"></ul>
-              </section>
             </div>
           </section>
+        </div>
+      </section>
+
+      <section id="team" class="section reveal">
+        <div class="section-heading compact">
+          <p class="section-kicker">Team</p>
+          <h2>Project team</h2>
+          <p>Dhanekula Institute of Engineering and Technology</p>
+        </div>
+
+        <div class="team-grid">
+          <article class="team-card">
+            <h3>Mr. Ravikanth Mishra</h3>
+            <p>Project mentor and academic guide.</p>
+          </article>
+          <article class="team-card">
+            <h3>Sravya Bolla</h3>
+            <p>Core project contributor.</p>
+          </article>
+          <article class="team-card">
+            <h3>Sahithya Alladi</h3>
+            <p>Core project contributor.</p>
+          </article>
+          <article class="team-card">
+            <h3>Durga Bhavani Mareedu</h3>
+            <p>Core project contributor.</p>
+          </article>
+          <article class="team-card">
+            <h3>James Chepala</h3>
+            <p>Core project contributor and deployment owner.</p>
+          </article>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <div>
-        <strong>Fetal Head AI</strong>
-        <p>Interactive ultrasound biometrics demo with live deployment on Render and domain mapping from Hostinger.</p>
-      </div>
+      <strong>Fetal Head AI</strong>
       <a class="footer-link" href="#home">Back to top</a>
     </footer>
 
