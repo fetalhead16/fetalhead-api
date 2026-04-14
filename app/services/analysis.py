@@ -37,6 +37,8 @@ class UltrasoundAnalyzer:
         self.model_dir = project_root / "models"
         self.classifier = None
         self.scaler = None
+        self.image_classifier = None
+        self.image_scaler = None
         self._load_classifier()
 
     def _load_classifier(self) -> None:
@@ -45,11 +47,17 @@ class UltrasoundAnalyzer:
 
         model_path = self.model_dir / "random_forest.joblib"
         scaler_path = self.model_dir / "feature_scaler.joblib"
+        image_model_path = self.model_dir / "image_random_forest.joblib"
+        image_scaler_path = self.model_dir / "image_feature_scaler.joblib"
 
         if model_path.exists():
             self.classifier = joblib.load(model_path)
         if scaler_path.exists():
             self.scaler = joblib.load(scaler_path)
+        if image_model_path.exists():
+            self.image_classifier = joblib.load(image_model_path)
+        if image_scaler_path.exists():
+            self.image_scaler = joblib.load(image_scaler_path)
 
     def analyze(
         self,
@@ -78,6 +86,7 @@ class UltrasoundAnalyzer:
             quality=quality,
             gestational_age_weeks=gestational_age_weeks,
             absolute_measurements=loaded.pixel_spacing_mm is not None,
+            source_frame=preprocessed,
         )
         previews = self._build_previews(loaded.rgb, preprocessed, contour, ellipse)
 
@@ -335,7 +344,26 @@ class UltrasoundAnalyzer:
         quality: dict[str, Any],
         gestational_age_weeks: Optional[int],
         absolute_measurements: bool,
+        source_frame: Optional[np.ndarray],
     ) -> dict[str, Any]:
+        if self.image_classifier is not None:
+            image_features = self._extract_image_features_from_frame(source_frame)
+            if image_features is not None:
+                features = image_features.reshape(1, -1)
+                features = self.image_scaler.transform(features) if self.image_scaler is not None else features
+                prediction = int(self.image_classifier.predict(features)[0])
+                return {
+                    "classifier_mode": "image_random_forest",
+                    "status": "abnormal" if prediction == 1 else "normal",
+                    "summary": "Image classifier suggests an abnormal pattern."
+                    if prediction == 1
+                    else "Image classifier suggests a normal pattern.",
+                    "notes": [
+                        "Trained image Random Forest weights were loaded from the local models directory.",
+                        "Use this output as a screening aid, not a clinical diagnosis.",
+                    ],
+                }
+
         features = np.array(
             [
                 measurements["hc"]["value"],
@@ -386,6 +414,35 @@ class UltrasoundAnalyzer:
             "summary": summary,
             "notes": self._unique_notes(notes),
         }
+
+    def _extract_image_features_from_frame(self, frame: Optional[np.ndarray]) -> Optional[np.ndarray]:
+        if frame is None:
+            return None
+        grayscale = frame if frame.ndim == 2 else cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        resized = cv2.resize(grayscale, (256, 256), interpolation=cv2.INTER_AREA)
+        blurred = cv2.GaussianBlur(resized, (3, 3), 0)
+
+        hist = cv2.calcHist([blurred], [0], None, [16], [0, 256]).flatten().astype(np.float32)
+        if hist.sum() > 0:
+            hist /= hist.sum()
+
+        edges = cv2.Canny(blurred, 50, 150)
+        edge_density = float(edges.mean() / 255.0)
+        lap_var = float(cv2.Laplacian(blurred, cv2.CV_64F).var())
+
+        mean = float(blurred.mean())
+        std = float(blurred.std())
+        p10 = float(np.percentile(blurred, 10))
+        p90 = float(np.percentile(blurred, 90))
+        contrast = p90 - p10
+
+        features = np.concatenate(
+            [
+                np.array([mean, std, p10, p90, contrast, edge_density, lap_var], dtype=np.float32),
+                hist,
+            ]
+        )
+        return features
 
     def _build_previews(
         self,

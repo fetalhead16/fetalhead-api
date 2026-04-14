@@ -4,3 +4,11 @@ __pycache__/
 .pytest_cache/
 outputs/
 data/registrations.jsonl
+datasets/raw/
+datasets/processed/
+datasets/labels/
+train/
+valid/
+test/
+README.dataset.txt
+README.roboflow.txt

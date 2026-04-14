@@ -17,6 +17,8 @@ Expected structure (example):
 - `datasets/raw/kaggle_fetal_head/images/`
 - `datasets/raw/kaggle_fetal_head/masks/`
 - `datasets/labels/labels.csv` (image,label)
+- `datasets/raw/roboflow_classification/images/`
+- `datasets/labels/roboflow_labels.csv` (image,label,class_name,split)
 
 Next training tasks:
 
@@ -33,4 +35,7 @@ Quick commands once data is available:
 python scripts/prepare_datasets.py
 python scripts/extract_biometry_features.py --images-dir datasets/raw/kaggle_fetal_head/images --masks-dir datasets/raw/kaggle_fetal_head/masks
 python scripts/train_random_forest.py --features datasets/processed/biometry_features.csv --labels datasets/labels/labels.csv
+python scripts/import_roboflow_classification.py --source <roboflow-export>
+python scripts/extract_image_features.py --images-dir datasets/raw/roboflow_classification/images --output datasets/processed/roboflow_image_features.csv
+python scripts/train_image_random_forest.py --features datasets/processed/roboflow_image_features.csv --labels datasets/labels/roboflow_labels.csv
 ```
