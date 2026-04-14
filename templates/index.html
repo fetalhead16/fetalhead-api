@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fetal Head Biometrics Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Segmentation-driven fetal head analysis</span>
+          <h1>Upload an ultrasound image and extract the biometric values instantly.</h1>
+          <p class="hero-text">
+            This research-demo app follows the paper workflow in your project folder: preprocess the scan, isolate the fetal head,
+            fit an ellipse, and return <strong>HC</strong>, <strong>BPD</strong>, <strong>OFD</strong>, <strong>CI</strong>, and
+            <strong>HA</strong>.
+          </p>
+          <div class="hero-pills">
+            <span>Frontend included</span>
+            <span>Backend included</span>
+            <span>Hostinger-ready packaging</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-label">Pipeline</div>
+          <ol>
+            <li>Upload ultrasound frame or DICOM</li>
+            <li>Preprocess and detect head contour</li>
+            <li>Fit ellipse and compute biometrics</li>
+            <li>Show overlay and screening summary</li>
+          </ol>
+          <p class="hero-footnote">
+            If the file has no calibration metadata, the app still works but reports values in pixels instead of millimeters.
+          </p>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="panel input-panel">
+          <div class="panel-header">
+            <h2>Scan Input</h2>
+            <span class="badge">Research demo</span>
+          </div>
+
+          <form id="analysis-form">
+            <label class="dropzone" for="image">
+              <input id="image" name="image" type="file" accept=".png,.jpg,.jpeg,.bmp,.dcm,.dicom" required />
+              <span class="dropzone-title">Drop an ultrasound image here</span>
+              <span class="dropzone-subtitle">or click to browse PNG, JPG, BMP, or DICOM files</span>
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>Pixel spacing (mm/pixel)</span>
+                <input
+                  id="pixel_spacing_mm"
+                  name="pixel_spacing_mm"
+                  type="number"
+                  step="0.0001"
+                  min="0"
+                  placeholder="Optional for JPG/PNG"
+                />
+              </label>
+              <label class="field">
+                <span>Gestational age (weeks)</span>
+                <input
+                  id="gestational_age_weeks"
+                  name="gestational_age_weeks"
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="45"
+                  placeholder="Optional"
+                />
+              </label>
+            </div>
+
+            <div class="cta-row">
+              <button id="analyze-button" type="submit">Analyze Image</button>
+              <p class="inline-note">
+                DICOM files can auto-read pixel spacing. Standard images usually need manual calibration for true millimeter values.
+              </p>
+            </div>
+          </form>
+
+          <div id="selected-file" class="selected-file" hidden></div>
+          <img id="local-preview" class="local-preview" alt="Selected image preview" hidden />
+          <div id="status-box" class="status-box">Waiting for an upload.</div>
+        </section>
+
+        <section class="panel output-panel">
+          <div class="panel-header">
+            <h2>Analysis Output</h2>
+            <span id="status-chip" class="status-chip neutral">Idle</span>
+          </div>
+
+          <div id="empty-state" class="empty-state">
+            <p>Run an upload to see measured values, segmentation previews, and the screening summary.</p>
+          </div>
+
+          <div id="results-block" hidden>
+            <section class="summary-card">
+              <div>
+                <p class="summary-label">Assessment</p>
+                <h3 id="assessment-title">No analysis yet</h3>
+              </div>
+              <p id="assessment-text" class="summary-text"></p>
+            </section>
+
+            <section id="metrics-grid" class="metrics-grid"></section>
+
+            <section class="info-grid">
+              <article class="info-card">
+                <h3>Calibration</h3>
+                <div id="calibration-list" class="stack-list"></div>
+              </article>
+              <article class="info-card">
+                <h3>Quality</h3>
+                <div id="quality-list" class="stack-list"></div>
+              </article>
+            </section>
+
+            <section class="image-grid">
+              <figure class="image-card">
+                <img id="overlay-preview" alt="Overlay preview" />
+                <figcaption>Contour and ellipse overlay</figcaption>
+              </figure>
+              <figure class="image-card">
+                <img id="mask-preview" alt="Mask preview" />
+                <figcaption>Derived segmentation mask</figcaption>
+              </figure>
+              <figure class="image-card">
+                <img id="preprocessed-preview" alt="Preprocessed preview" />
+                <figcaption>Preprocessed ultrasound frame</figcaption>
+              </figure>
+            </section>
+
+            <section class="notes-card">
+              <h3>Notes</h3>
+              <ul id="notes-list"></ul>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="{{ url_for('static', path='/js/app.js') }}" defer></script>
+  </body>
+</html>

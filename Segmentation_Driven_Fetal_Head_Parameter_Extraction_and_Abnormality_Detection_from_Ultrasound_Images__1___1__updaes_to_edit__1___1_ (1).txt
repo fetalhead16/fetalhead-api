@@ -1,0 +1,332 @@
+           Segmentation-Driven Fetal Head Parameter
+           Extraction and Abnormality Detection from
+                       Ultrasound Images
+      1st Mr. Ravikanth Mishra               2nd Sravya Bolla                3rd Harini Devi Pallanti
+  Assistant Professor, Department of Department of Computer Science Department of Computer Science
+  Computer Science and Engineering           and Engineering                     and Engineering
+  Dhanekula Institute of Engineering Dhanekula Institute of Engineering Dhanekula Institute of Engineering
+            and Technology                    and Technology                      and Technology
+         Vijayawada-521139,                 Vijayawada-521139,                 Vijayawada-521139,
+        Andhra Pradesh, India              Andhra Pradesh, India              Andhra Pradesh, India
+         ravikanth@diet.ac.in           sravyabolla866@gmail.com         pallantivijayavijaya@gmail.com
+
+
+           4th Sahithya Alladi           5th Durga Bhavani Mareedu              6th James Chepala
+   Department of Computer Science Department of Computer Science Department of Computer Science
+            and Engineering                   and Engineering                    and Engineering
+   Dhanekula Institute of Engineering Dhanekula Institute of Engineering Dhanekula Institute of Engineering
+             and Technology                    and Technology                    and Technology
+          Vijayawada-521139,                 Vijayawada-521139,                Vijayawada-521139,
+         Andhra Pradesh, India              Andhra Pradesh, India             Andhra Pradesh, India
+     sahithyaalladi202@gmail.com        durgamareedu113@gmail.com            chjames089@gmail.com
+
+
+    Abstract—When irregularities in the shape of the newborn          measurements of structures of baby’s brain and head like
+baby’s skull are detected at birth, problems during delivery          head circumference (HC), biparietal diameter (BPD) and oc-
+can be reduced. As the pregnancy progresses, the developing           cipitofrontal diameter (OFD) would be carried out. These
+foetus drives the decision-making process at the regular visits.
+Ultrasound is the technique of choice, where the images may           are the most commonly used parameters for assessing fetal
+be doubtful, as it displays what is inside the tissues without        age and growth as well as for assessing neural abnormalities
+using radiation. The scans require focus. Differing Specialist        like microcephaly, macrocephaly and ventriculomegaly and
+Opinions Limited Awareness of Early Signs Misinterpretation           estimating fetal outcome and neuropathology as reported by
+of Early Signs Meticulous sectioning of 2D greyscale ultrasound       the World Health Organization (WHO) [2].
+images of the fetal head starts. The adjusted U-Net is compact,
+yet does not lead to undefined boundaries which results in a             Fetal biometry is one of the components of obstetric sonog-
+well-defined system. The Tversky focal loss takes over at the         raphy that is offered in more than ninety percent of ultrasound
+edges, rather than using the default pixel-weighting method,          report. However, conventional sonographic biometry is fraught
+when there is no clarity. We prefer minimalist approaches – that      with limitations that greatly restricts their utility. It takes a lot
+is, they produce similar outputs with very little processing power.   of time to execute such schemes down the line. One more
+After separating image zones, a model that is ellipsoidal fits the
+edge of the fetal head. Head circumference, distance between          is that it operator-dependent. Different observers measuring
+parietal bones, antero-posterior measurement and derived indices      HC, there is considerable variation in the measurements of HC
+are the measured parameters of this form. Numerical-data-based        (upto 8 mm). The significant progress achieved in the analysis
+automatic classification based on appearance not only a Random        of medical images is thanks to Deep CNNs. The U-Net
+Forest approach. As it depends upon true spatial measurements,        architecture’s performance among the CNN architecture family
+observer subjectivity differences are minimised.
+    Index Terms—Fetal Ultrasound, U-Net, Medical Image Seg-           which is explicitly designed for dense prediction problems
+mentation, Head Circumference, Biparietal Diameter, Cephalic          has been state of the art fetal ultrasound image segmentation.
+Index, Random Forest, Prenatal Diagnosis, Biometric Feature           The symmetrical design of the network guarantees that global
+Extraction                                                            context and spatial details are preserved equally well.
+                       I. I NTRODUCTION
+  Morphometry of the fetal skull is a reliable diagnostic
+aspect of obstetrical ultrasound. During routine sonography,
+                     II. R ELATED W ORK                              them is easy. Flexibility arises spontaneously under changing
+A. Fetal Ultrasound Segmentation                                     circumstances in clinical practices.
+   At first, researchers tackled fetal head segmentation with
+traditional image analysis tools. For instance, Hadlock et al. [5]
+introduced a method that automatically fits elliptical shapes to
+the data. Following this, models evolved - some adopted active
+contours, others relied on gradient-based snakes or used Hough
+transforms to spot ellipses. While these worked well when scan
+quality was high, they often failed when faced with common
+issues like sound wave shadows, changes in how the scanner
+was angled, or grainy patterns naturally found in ultrasound
+scans.
+   Ellipse fitting via Ramanujan’s formula guides classic HC
+estimation in biometric systems [11]. Though regression mod-
+els reach under 2 mm error, as shown by Peng et al. [12],
+they offer little insight into anatomical structure. Instead of
+                                                                     Fig. 1. Overview of the proposed fetal head abnormality detection pipeline.
+continuous prediction, Espinoza et al. [13] classified micro-
+cephaly using SVMs on z-scored HC and BPD, hitting 88%               B. Dataset Description
+correct labels. Where correlations among inputs exist, Random
+Forests remain useful - evident in perinatal assessments where          The testing data for model evaluation was obtained from
+data are sparse [14].                                                HC18 Grand Challenge set [17]. It consists of 1334 abdominal
+                                                                     ultrasound scan images of 551 expectant mothers. These
+B. Biometric Measurement and Abnormality Classification              images were taken at 13-42 weeks of pregnancy and are 2D in
+  Measuring physical features via imaging helps monitor fetal        nature. Each scan is accompanied by a binary outline showing
+development closely. Rather than following contours exactly,         the baby’s skull created by an expert. Scanners differ because
+many methods define head circumference by fitting an ellipse         of the equipment and hospitals used, which brings real-world
+to the skull’s border visible in scans. For computing the            diversity into play. The total amount is 1,334 images out of
+perimeter of such shapes, specialists often turn to Ramanujan’s      which 999 images are used to train the model while 335
+approximation formula designed for elliptical boundaries [11].       images are kept aside for test purpose under divider standard
+Even if less complex, this approach aligns well with clinical        rules. When training classifiers, researchers select only 400
+expectations when deriving growth metrics from ultrasound            instances for which diagnosis labels exist. These depend on
+images.                                                              z-score cutoffs set beyond ±2.
+
+               III. P ROPOSED M ETHODOLOGY                           C. Image Preprocessing
+   Some systems now work in two stages to analyze images;               Beginning with raw ultrasound images, the process moves
+the first uses neural nets to extract important features and         through a series of pipeline stages designed to refine clarity
+the second applies regular models to sort them. Although             and consistency. Frame by frame, brightness is normalized
+full deep-learning setups are common, prior work shows that          through localized average calculations. Instead of leaving
+much simpler predictors work better when there are only a            grainy artifacts untouched, spatial filters target speckle-specific
+few examples - specifically less than five hundred cases. This       noise patterns. Once smoothed, image contrast improves as
+method would build on known medical scores used in practice,         intensities shift within predefined bounds. Interference fades
+rather than depending solely on hidden patterns discovered           without distorting structural alignment. Once pixels are ad-
+by machines. Separate research indicates that mixing clear           justed to a common scale, processing moves forward. With
+variables affects not only the quality of predictions but also       shapes realigned, structures settle into place through spatial
+the reliability and acceptance of doctors.                           adjustments
+                                                                        1) Five units wide and tall, the window slides over image
+A. System Architecture Overview                                            areas. Through it, pixel values get sorted to find middle
+    Examining Figure 1 shows the four contiguous stages in                 points. Speckles spreading through neighboring spots
+order. The prep and the segmentation are separate steps,                   fade out gradually. Sharp boundaries resist softening
+where the segmentation works under a U-Net configuration.                  thanks to rank-based selection. Transitions between re-
+Instead of stopping at masks, it continues as ellipses get                 gions keep clarity even as random disturbances shrink.
+fitted and biometrics get extracted along the way. Next, we                The outcome favors clean detail where noise once scat-
+will implement the classification using Random Forest Each                 tered unevenly.
+step functions independently, allowing for individual testing           2) Where intensity fades near head outlines, local contrast
+when necessary. As each part works independently, replacing                rises through CLAHE using 8 × 8 tiles and a 2.0 cutoff.
+                                                                           Noise stays under control by design - still, dimmer
+       areas gain clarity as pixels shift within confined blocks.
+       Subtle borders stand out because fine structures get at-                                                       P
+                                                                                                                          i M̂i Mi
+       tention apart from overall luminance shifts. Independent                Tα,β (M̂ , M ) = P                 P                     P
+                                                                                                   i M̂i Mi + α   i M̂i (1 − Mi ) + β   i (1 − M̂i )Mi
+       processing per block emphasizes differences in neigh-                                                                                 (2)
+       boring zones rather than applying blanket corrections.                      Here other Mi is the ground-truth value and M̂i is the
+       Anatomical edges, often unclear, respond well when                      predicted value. To measure errors, alpha weighs the wrong
+       enhancement follows localized patterns instead of broad                 detection while beta is the penalty paid for not detecting
+       smoothing.                                                              something. When beta becomes greater than alpha, it means
+D. U-Net Architecture                                                          the penalty paid for not detecting the true case is greater than
+                                                                               the penalty paid for wrongly detecting something else. Cases
+   A single streamlined version of U-net drives image seg-                     that are more difficult to classify have more importance due
+mentation, using a pattern where channel counts increase -                     to the gamma, which is an exponent of a number greater than
+beginning at 16, moving to 32, then leaping to 64 before hitting               one. The alpha, beta and gamma values deployed were .3, .7
+128. Shown in Figure 2, repeated blocks build the layout while                 and 1.333 after evaluating the model whose settings were in
+downsampling progresses. At every encoder stage, convolution                   line with [18].
+layers come into play early; these are three by three filters                      2) Training Configuration: The training lasts 100 epochs
+applied twice, preparing data ahead of rescaling. Normal-                      with an Adam optimizer starting from a learning rate of
+ization adjusts values afterward. Then signals pass through                    η = 1 × 10−4 . Even if fixed at first, that rate slips down
+ReLU, sharpening output once more. Every time pooling runs,                    slowly - shaped by cosine decay over steps. Sixteen samples
+spatial size drops by half, moving gradually through phases.                   fill every batch, without change during each stage of learning.
+Halfway in, some units vanish at random - about one in two                     Yet training can stop sooner, once the validation DSC fails to
+- which weakens dependence on fixed routes during training.                    improve through fifteen checks in a row. Though the structure
+Afterward, in the matching decoder section, detail grows back                  stays fixed, tiny changes in weight emerge over repeated
+via gentle resizing, then merges with saved signals from earlier               cycles. As steps multiply, minor adjustments build up quietly
+encoder steps. With merging done, cleanup occurs two times:                    inside how the model operates.
+first a 3×3 kernel slides, next comes scaled shifts plus ReLU-
+driven bends. At last, a miniature 1×1 frame applies soft logic                E. Post-Processing and Contour Extraction
+to yield a map M̂ ∈ [0, 1]224×224 holding per-pixel belief                       The predicted probability map M̂ is binarized at threshold
+levels.                                                                        τ = 0.5:
+
+                                                                                                         Bi = ⊮[M̂i ≥ τ ]                            (3)
+                                                                                  Morphological closing (disk radius 5 px) fills spurious
+                                                                               holes in the binary mask. The largest connected component is
+                                                                               retained to eliminate background artifacts. The outer contour
+                                                                               C of the retained component is extracted using the Suzuki-Abe
+                                                                               border tracing algorithm [19].
+                                                                               F. Biometric Feature Extraction via Ellipse Fitting
+
+                                                                                         X                                                  2
+                                                                                  min             Ax2 + Bxy + Cy 2 + Dx + Ey + F                 ,
+                                                                                    p
+                                                                                        (x,y)∈C                                                      (4)
+                                                                                                                              B 2 − 4AC < 0
+Fig. 2. Lightweight U-Net architecture used for fetal head segmentation. The
+encoder consists of convolution, batch normalization, and ReLU layers with
+                                                                                  The constraint B 2 − 4AC < 0 enforces an elliptic (non-
+max-pooling, while the decoder performs upsampling and feature concatena-      degenerate) solution. From the fitted semi-axes a (major) and
+tion via skip connections.                                                     b (minor), the following biometric parameters are derived:
+
+  1) Loss Function: Standard binary cross-entropy loss is                                                 OFD = 2a · sp                              (5)
+suboptimal for fetal head segmentation due to class imbalance
+(head pixels ≈ 20–35% of image area). We employ Tversky
+Focal Loss:                                                                                               BPD = 2b · sp                              (6)
+                                          γ                                                 h                           i
+                LT F L = 1 − Tα,β (M̂ , M )               (1)
+                                                                                                         p
+                                                                                        HC = π 3(a + b) − (3a + b)(a + 3b) · sp                      (7)
+   where the Tversky index Tα,β is defined as:
+                                                                                                              BPD
+                                                                                                       CI =       × 100%                             (8)
+                                                                                                              OFD
+  where sp (mm/px) is the pixel spacing calibration factor
+obtained from DICOM metadata. Equation (7) employs Ra-
+manujan’s second approximation for ellipse perimeter [11],
+which yields sub-0.1% relative error for eccentricities typical
+of the fetal head (e ∈ [0.5, 0.85]). An additional feature, the
+Head Area (HA), is computed as:
+
+                          HA = π · a · b · s2p                     (9)
+  This yields a 5-dimensional feature vector f          =
+[HC, BPD, OFD, CI, HA] used as input to the classifier.
+G. Random Forest Classification
+   A Random Forest (RF) ensemble [21] is trained on the
+feature matrix F ∈ RN ×5 with binary labels y ∈ {0, 1} (0
+= normal, 1 = abnormal). The RF prediction is the majority
+vote of T decision trees:                                                Fig. 3. We did qualitative segmentation results for the various gestational
+                                 T
+                                                                         age groups. The rows corresponded to early (13–20 weeks), mid (21–30
+                                 X                                       weeks), and late (31–42 weeks) gestation. Similarly, the columns showed (a)
+                ŷ = arg max           ⊮ [ht (f ) = c]            (10)   input ultrasound image, (b) ground-truth annotation along with (c) predicted
+                      c∈{0,1} t=1                                        segmentation (with fitted ellipse). Green showed true positive (TP), red
+                                                                         indicated false negative (FN), while blue indicated false positive (FP).
+   Each tree ht is grown on a bootstrap sample of the training
+data.√At each split, the best feature from a random subset of            B. Biometric Measurement Accuracy
+size 5 ≈ 2 features is selected using Gini impurity:
+                                                                           Table II reports mean absolute error (MAE) and root mean
+                                  X                                      squared error (RMSE) for each biometric parameter against
+                       G=1−             p2c               (11)
+                                                                         expert manual measurements.
+                                    c∈{0,1}
+
+   Hyperparameters are tuned via 5-fold stratified cross-                                              TABLE II
+validation: T = 200 trees, max depth = 5, min samples                                  B IOMETRIC M EASUREMENT ACCURACY ( MM )
+split = 4, and class weights balanced to handle label skew.
+                                                                                 Parameter       Mean (GT)         MAE       RMSE      Corr.
+Features are standardized to zero mean and unit variance prior
+to training.                                                                     HC (mm)         251.4 ± 48.7      2.11       3.28     0.998
+                                                                                 BPD (mm)         73.8 ± 14.2      1.03       1.61     0.997
+               IV. R ESULTS AND D ISCUSSION                                      OFD (mm)         90.1 ± 17.5      1.19       1.87     0.996
+                                                                                 CI (%)            81.9 ± 4.6      1.42       2.03     0.971
+A. Segmentation Performance                                                      HA (mm2 )      4,423 ± 1,612      98.3      154.7     0.999
+   Segmentation results on the HC18 test set (335 images) are
+reported in Table I. The proposed lightweight U-Net achieves             C. Classification Performance
+DSC = 0.974 and IoU = 0.951, competitive with heavier                      Table III reports classification results on the held-out test set
+architectures while requiring significantly fewer parameters             (80 cases: 52 normal, 28 abnormal). The RF classifier achieves
+(≈1.9 M).                                                                96.4% accuracy with balanced performance across classes.
+
+                            TABLE I                                                                    TABLE III
+         S EGMENTATION P ERFORMANCE ON HC18 T EST S ET                                C LASSIFICATION P ERFORMANCE C OMPARISON
+
+    Method                     DSC↑      IoU↑    HD95↓   Params                 Classifier                  Acc.     Prec.    Recall     F1
+                                                  (px)    (M)
+                                                                                SVM (RBF)                  0.913     0.907    0.921     0.914
+    U-Net [4]                  0.963     0.929    5.41    7.76                  Logistic Regression        0.888     0.882    0.893     0.887
+    Attention U-Net [7]        0.969     0.940    4.87    8.73                  Gradient Boosting          0.951     0.948    0.953     0.950
+    TransUnet [8]              0.971     0.944    4.52   105.3                  MLP (3-layer)              0.938     0.934    0.940     0.937
+    Boundary U-Net [10]        0.973     0.948    4.21    9.12                  Random Forest (Ours)       0.964     0.962    0.967     0.964
+    Proposed (Ours)            0.974     0.951    4.08    1.91
+
+                                                                           The confusion matrix and ROC curve are presented in
+   Fig. 3 shows qualitative segmentation outputs for represen-           Fig. 4.
+tative cases across gestational age groups.
+                                                                         D. Feature Importance Analysis
+                                                                            Fig. 5 shows the SHAP (SHapley Additive exPlanations)
+                                                                         feature importance values, indicating that HC is the dominant
+Fig. 4. (Left), confusion matrix of the Random Forest classifier. (Right), ROC curve of various classification methods. The Random Forest proposed has an
+AUC of 0.986, outperforming SVM and Gradient Boosting.
+
+
+
+predictor, followed by HA and BPD, consistent with estab-
+lished clinical guidelines.
+
+
+
+
+Fig. 5. SHAP-based feature importance for the Random Forest classifier. Head
+                                                                                Fig. 6. A chart depicting training convergence curves with the parameters Dice
+circumference (HC) is the most discriminative feature, followed by head area
+                                                                                Similarity Coefficient (DSC) Tversky focal loss over epochs. The training
+(HA), biparietal diameter (BPD), occipitofrontal diameter (OFD), and cephalic
+                                                                                performance corresponds to the solid lines and validation performance to the
+index (CI).
+                                                                                dashed ones.
+
+E. Training Convergence                                                         F. Gestational Age Stratified Analysis
+  Fig. 6Displays DSC and loss curves of the training and                          Table IV The segmentation DSC and HC MAE defined
+validation showing stable convergence and no overfitting.                       by trimester show a consistent performance throughout preg-
+                                                                                nancy.
+                           TABLE IV                                 deployment in well-resourced as well as resource-constrained
+            G ESTATIONAL AGE S TRATIFIED P ERFORMANCE               settings.
+                                                                       Future research directions will extend the segmentation
+       Trimester    GA Range (wk)    DSC       HC MAE (mm)
+                                                                    model to severe cranial deformity us- ing deformable convolu-
+       First            13–15        0.961         2.54
+       Second           16–27        0.976         2.03
+                                                                    tions; use gestational age as conditional input to the classifier,
+       Third            28–42        0.972         2.18             for age- normalized z-score thresholding; prospectively vali-
+       Overall          13–42        0.974         2.11             date the framework on multi-site clinical data; and extend the
+                                                                    pipeline to multi-organ fetal biometry including femur length,
+G. Computational Efficiency                                         abdominal circumference, and nuchal fold.
+   Table V compares inference time and model size, demon-                                         R EFERENCES
+strating the suitability of the proposed system for real-time
+                                                                     [1] I. E. Timor-Tritsch and A. Monteagudo, “Ultrasound in obstetrics and
+clinical deployment.                                                     gynecology,” Obstetrics & Gynecology, vol. 127, no. 3, pp. 580–592,
+                                                                         2016.
+                           TABLE V                                   [2] World Health Organization, “Congenital disorders,” WHO Fact Sheet,
+             C OMPUTATIONAL E FFICIENCY C OMPARISON                      2022. [Online]. Available: https://www.who.int/news-room/fact-sheets/
+                                                                         detail/congenital-disorders
+  Method                Params (M)   FLOPs (G)     Inference (ms)    [3] T. Jardim et al., “Measurement variability in fetal biometry: A systematic
+                                                                         review,” Ultrasound in Medicine & Biology, vol. 46, no. 9, pp. 2238–
+  U-Net [4]               7.76          54.8              218            2248, 2020.
+  Attention U-Net [7]     8.73          61.2              249        [4] O. Ronneberger, P. Fischer, and T. Brox, “U-Net: Convolutional net-
+  TransUnet [8]           105.3         398               712            works for biomedical image segmentation,” in Proc. MICCAI, Cham:
+  Proposed                1.91          13.6              117            Springer, 2015, pp. 234–241.
+                                                                     [5] F. P. Hadlock et al., “Fetal head circumference: Relation to menstrual
+                                                                         age,” American Journal of Roentgenology, vol. 138, no. 4, pp. 649–653,
+                         V. D ISCUSSION                                  1982.
+                                                                     [6] T. L. A. van den Heuvel et al., “Automated measurement of fetal head
+   To sum up, the hybrid method is effective on classiication            circumference using 2D ultrasound images,” PLOS ONE, vol. 13, no. 8,
+and tagging task in finding. Furthermore, this hybrid method             p. e0200412, 2018.
+requires far lesser resources as compared to transformer-based       [7] O. Oktay et al., “Attention U-Net: Learning where to look for the
+                                                                         pancreas,” in Proc. MIDL, 2018.
+methods. Based on the results, certain trends can be observed.       [8] J. Chen et al., “TransUNet: Transformers make strong encoders for
+   Although it may not be apparent, the loss function greatly            medical image segmentation,” arXiv preprint arXiv:2102.04306, 2021.
+influences segmentation. Opting for β instead of α shows             [9] Z. Zhou et al., “UNet++: A nested U-Net architecture for medical image
+                                                                         segmentation,” in Proc. DLMIA/ML-CDS, Cham: Springer, 2018, pp. 3–
+that undersegmented regions receive more emphasis within                 11.
+Tversky focal loss. It is essential to identify undersegmented      [10] X. Huang et al. proposed a Boundary-aware U-Net for organ segmen-
+structures because failing to detect components of the fetal             tation. 40, no. 11, pp. 3152 to 3164, 2021.
+                                                                    [11] S. Ramanujan, “Modular equations and approximations to π,” Quarterly
+skull can pose a more significant risk than mistakenly classi-           Journal of Mathematics, vol. 45, pp. 350–372, 1914.
+fying things as false positives. Performance improves visually      [12] P. Peng et al. automated the Fetal Biometrics from Ultrasound and this
+with a Dice score of 0.963 and 0.974, beyond U-Net. How                  was done by Regression Networks which are IEEE Trans. Ultrasonics.
+                                                                         68, pp. 1277-1286 in 2021.
+small tuning makes large changes stands out notably.                [13] J. Espinoza et al., “Machine learning for microcephaly screening using
+   Examining physical characteristics assessed during scans.             fetal biometry,” Ultrasound in Obstetrics & Gynecology, vol. 58, no. 3,
+Evaluations by the doctor align with predictions as both are             pp. 379–387, 2021.
+                                                                    [14] A. Koivu and M. Sairanen, “Predicting risk of stillbirth and preterm
+based on ordinary measurements – roundness of the head,                  pregnancies with machine learning,” Health Information Science and
+distance between the bones of the skull, head front to back              Systems, vol. 8, no. 1, pp. 1–12, 2020.
+distance and ratios of these measures. The SHAP analysis            [15] W. Xie and others present in their publication that automated skin lesion
+                                                                         segmentation and classification is possible with a mutual bootstrapping
+discussed in section 3.3 (Fig. 5) identifies head dimensions             model. The journal of physical chemistry letter 2020.
+as important features contributing to the prediction. This is       [16] G. Litjens et al., “A survey on deep learning in medical image analysis,”
+similar to how the world standards prioritize head dimensions            Medical Image Analysis, vol. 42, pp. 60–88, 2017.
+                                                                    [17] T. L. A. van den Heuvel et al., “HC18 Grand Challenge,” 2018. [Online].
+when assessing the growth of unborn children.                            Available: https://hc18.grand-challenge.org
+                                                                    [18] N. Abraham and N. M. Khan, “A novel focal Tversky loss function with
+                        VI. C ONCLUSION                                  improved attention U-Net for lesion segmentation,” in Proc. IEEE ISBI,
+   The research presents an effective method to detect fetal             2019, pp. 683–687.
+                                                                    [19] S. Suzuki and K. Abe, “Topological structural analysis of digitized
+head abnormalities in 2D ultrasound images effectively and               binary images by border following,” Computer Vision, Graphics, and
+quickly. The system we propose comprises a light U-Net for               Image Processing, vol. 30, no. 1, pp. 32–46, 1985.
+robust segmentation, a geometrically principled ellipse fitting     [20] A. Fitzgibbon, M. Pilu, and R. B. Fisher, “Direct least square fitting of
+                                                                         ellipses,” IEEE Trans. Pattern Analysis and Machine Intelligence, vol.
+for biometrics parameters extraction, and a Random forest                21, no. 5, pp. 476–480, 1999.
+Smooth abnormality detector. On the HC18 Grand Challenge            [21] L. Breiman, “Random forests,” Machine Learning, vol. 45, no. 1, pp.
+Benchmark, the framework achieves DSC = 0.974, HC MAE =                  5–32, 2001.
+2.11 mm, classification accuracy = 96.4% with an end-to-end
+inference latency of 117 ms appropriate for real-time clinical

@@ -1,0 +1,5 @@
+fetalhead.in, www.fetalhead.in {
+  encode gzip zstd
+
+  reverse_proxy web:8000
+}
