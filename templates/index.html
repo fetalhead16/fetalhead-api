@@ -134,7 +134,7 @@
 
             <div class="helper-strip">
               <span class="helper-pill">Best input: fetal head cross-section</span>
-              <span class="helper-pill">Calibrated DICOM required for mm</span>
+              <span class="helper-pill">DICOM or manual spacing for mm</span>
             </div>
 
             <form id="analysis-form">
@@ -145,6 +145,17 @@
               </label>
 
               <div class="field-grid">
+                <label class="field">
+                  <span>Pixel spacing (mm/pixel)</span>
+                  <input
+                    id="pixel_spacing_mm"
+                    name="pixel_spacing_mm"
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    placeholder="Optional for JPG/PNG"
+                  />
+                </label>
                 <label class="field">
                   <span>Gestational age (weeks)</span>
                   <input
@@ -192,6 +203,10 @@
 
               <section class="info-grid">
                 <article class="info-card">
+                  <h3>Calibration</h3>
+                  <div id="calibration-list" class="stack-list"></div>
+                </article>
+                <article class="info-card">
                   <h3>Quality</h3>
                   <div id="quality-list" class="stack-list"></div>
                 </article>
@@ -210,6 +225,11 @@
                   <img id="preprocessed-preview" alt="Preprocessed preview" />
                   <figcaption>Preprocessed ultrasound frame</figcaption>
                 </figure>
+              </section>
+
+              <section id="notes-card" class="notes-card" hidden>
+                <h3>Notes</h3>
+                <ul id="notes-list"></ul>
               </section>
             </div>
           </section>

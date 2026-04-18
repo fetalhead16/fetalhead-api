@@ -86,22 +86,6 @@ class UltrasoundAnalyzer:
             )
 
         measurements = self._calculate_measurements(ellipse, loaded.pixel_spacing_mm)
-
-        if quality["confidence"] < self.MIN_BIOMETRY_CONFIDENCE:
-            raise ValueError(
-                "This upload may be useful for screening, but it is not reliable enough for medical fetal head biometry. Please upload a clearer standard head plane."
-            )
-
-        if not self.MIN_PLAUSIBLE_CI <= measurements["ci"]["value"] <= self.MAX_PLAUSIBLE_CI:
-            raise ValueError(
-                "The detected contour is not clinically plausible for a standard fetal head biometry plane. Please upload a calibrated DICOM or a clearer fetal head cross-section."
-            )
-
-        if loaded.pixel_spacing_mm is None:
-            raise ValueError(
-                "True medical biometry in mm requires calibration metadata. Please upload a DICOM scan with PixelSpacing so the app can report HC, BPD, OFD, and HA in millimeters."
-            )
-
         assessment = self._build_assessment(
             measurements=measurements,
             quality=quality,
@@ -112,6 +96,14 @@ class UltrasoundAnalyzer:
         previews = self._build_previews(loaded.rgb, preprocessed, contour, ellipse)
 
         notes = list(loaded.notes)
+        if quality["confidence"] < self.MIN_BIOMETRY_CONFIDENCE:
+            notes.append(
+                "This upload may be useful for screening, but it is not reliable enough for medical fetal head biometry. Please upload a clearer standard head plane."
+            )
+        if not self.MIN_PLAUSIBLE_CI <= measurements["ci"]["value"] <= self.MAX_PLAUSIBLE_CI:
+            notes.append(
+                "The detected contour is not clinically plausible for a standard fetal head biometry plane. Please upload a calibrated DICOM or a clearer fetal head cross-section."
+            )
         if loaded.pixel_spacing_mm is None:
             notes.append(
                 "Absolute millimeter values need image calibration. Enter pixel spacing manually or upload a DICOM file with PixelSpacing metadata."
