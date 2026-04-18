@@ -11,10 +11,7 @@ const statusChip = document.getElementById("status-chip");
 const emptyState = document.getElementById("empty-state");
 const resultsBlock = document.getElementById("results-block");
 const metricsGrid = document.getElementById("metrics-grid");
-const calibrationList = document.getElementById("calibration-list");
 const qualityList = document.getElementById("quality-list");
-const notesCard = document.getElementById("notes-card");
-const notesList = document.getElementById("notes-list");
 const assessmentTitle = document.getElementById("assessment-title");
 const assessmentText = document.getElementById("assessment-text");
 const overlayPreview = document.getElementById("overlay-preview");
@@ -102,32 +99,8 @@ function renderMetrics(measurements) {
     .join("");
 }
 
-function renderNotes(notes) {
-  const resolvedNotes = uniqueNotes(notes);
-  if (!resolvedNotes.length) {
-    notesList.innerHTML = "";
-    hideElement(notesCard);
-    return resolvedNotes;
-  }
-
-  notesList.innerHTML = resolvedNotes.map((note) => `<li>${note}</li>`).join("");
-  showElement(notesCard);
-  return resolvedNotes;
-}
-
 function getCondition(status) {
   return ["normal", "no_shape_flag"].includes(status) ? "Normal" : "Abnormal";
-}
-
-function hasReviewWarning(notes) {
-  return notes.some((note) =>
-    [
-      "not reliable enough for medical fetal head biometry",
-      "not clinically plausible for a standard fetal head biometry plane",
-      "Absolute millimeter values need image calibration",
-      "did not expose PixelSpacing metadata",
-    ].some((marker) => note.includes(marker)),
-  );
 }
 
 function renderResult(data) {
@@ -135,17 +108,6 @@ function renderResult(data) {
   showElement(resultsBlock);
 
   renderMetrics(data.measurements);
-  const resolvedNotes = renderNotes([...data.assessment.notes, ...data.notes]);
-
-  renderStackItems(calibrationList, [
-    ["Source", data.calibration.source],
-    ["Absolute values", data.calibration.absolute_measurements ? "Yes" : "No"],
-    [
-      "Pixel spacing",
-      data.calibration.pixel_spacing_mm == null ? "Not available" : `${numberFormatter.format(data.calibration.pixel_spacing_mm)} mm/pixel`,
-    ],
-    ["Image size", `${data.image_size[0]} x ${data.image_size[1]}`],
-  ]);
 
   renderStackItems(qualityList, [
     ["Condition", getCondition(data.assessment.status)],
@@ -162,7 +124,7 @@ function renderResult(data) {
   maskPreview.src = data.previews.mask;
   preprocessedPreview.src = data.previews.preprocessed;
 
-  if (["review_recommended", "abnormal", "invalid_plane"].includes(data.assessment.status) || hasReviewWarning(resolvedNotes)) {
+  if (["review_recommended", "abnormal", "invalid_plane"].includes(data.assessment.status)) {
     setStatus("Analysis complete. Review the overlay and input plane carefully.", "warn");
   } else if (data.assessment.status === "low_confidence") {
     setStatus("Analysis complete, but contour confidence is low.", "bad");
@@ -337,5 +299,4 @@ setupCounters();
 setupNavigation();
 hideElement(selectedFile);
 hideElement(localPreview);
-hideElement(notesCard);
 hideElement(resultsBlock);

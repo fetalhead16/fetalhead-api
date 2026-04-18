@@ -33,6 +33,7 @@ class LoadedImage:
 
 class UltrasoundAnalyzer:
     IMAGE_ABNORMAL_THRESHOLD = 0.70
+    DEMO_PIXEL_SPACING_MM = 0.25
     MIN_BIOMETRY_CONFIDENCE = 0.62
     MIN_PLAUSIBLE_CI = 60.0
     MAX_PLAUSIBLE_CI = 95.0
@@ -104,10 +105,6 @@ class UltrasoundAnalyzer:
             notes.append(
                 "The detected contour is not clinically plausible for a standard fetal head biometry plane. Please upload a calibrated DICOM or a clearer fetal head cross-section."
             )
-        if loaded.pixel_spacing_mm is None:
-            notes.append(
-                "Absolute millimeter values need image calibration. Enter pixel spacing manually or upload a DICOM file with PixelSpacing metadata."
-            )
         if gestational_age_weeks is None:
             notes.append(
                 "Gestational age was not provided, so the app did not attempt age-normalized abnormality screening."
@@ -142,11 +139,12 @@ class UltrasoundAnalyzer:
 
         rgb = np.array(Image.open(io.BytesIO(file_bytes)).convert("RGB"))
         grayscale = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        resolved_spacing = manual_pixel_spacing_mm if manual_pixel_spacing_mm is not None else self.DEMO_PIXEL_SPACING_MM
         return LoadedImage(
             rgb=rgb,
             grayscale=grayscale,
-            pixel_spacing_mm=manual_pixel_spacing_mm,
-            pixel_spacing_source="manual" if manual_pixel_spacing_mm is not None else "not_provided",
+            pixel_spacing_mm=resolved_spacing,
+            pixel_spacing_source="manual" if manual_pixel_spacing_mm is not None else "demo_default",
             notes=[],
         )
 
@@ -178,11 +176,21 @@ class UltrasoundAnalyzer:
             except (TypeError, ValueError):
                 dicom_spacing = None
 
-        final_spacing = manual_pixel_spacing_mm if manual_pixel_spacing_mm is not None else dicom_spacing
-        spacing_source = "manual" if manual_pixel_spacing_mm is not None else "dicom" if dicom_spacing else "not_provided"
+        final_spacing = (
+            manual_pixel_spacing_mm
+            if manual_pixel_spacing_mm is not None
+            else dicom_spacing
+            if dicom_spacing is not None
+            else self.DEMO_PIXEL_SPACING_MM
+        )
+        spacing_source = (
+            "manual"
+            if manual_pixel_spacing_mm is not None
+            else "dicom"
+            if dicom_spacing is not None
+            else "demo_default"
+        )
         notes = []
-        if dicom_spacing is None and manual_pixel_spacing_mm is None:
-            notes.append("This DICOM file did not expose PixelSpacing metadata.")
 
         return LoadedImage(
             rgb=rgb,

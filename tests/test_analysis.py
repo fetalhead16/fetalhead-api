@@ -37,7 +37,7 @@ class UltrasoundAnalyzerTests(unittest.TestCase):
         self.assertAlmostEqual(result["measurements"]["bpd"]["value"], 44.8, delta=10.0)
         self.assertAlmostEqual(result["measurements"]["ci"]["value"], 72.26, delta=10.0)
 
-    def test_returns_pixel_values_without_calibration_metadata(self) -> None:
+    def test_uses_demo_spacing_for_uncalibrated_uploads(self) -> None:
         image = np.zeros((520, 680, 3), dtype=np.uint8)
         center = (340, 260)
         axes = (155, 112)
@@ -58,12 +58,9 @@ class UltrasoundAnalyzerTests(unittest.TestCase):
             gestational_age_weeks=24,
         )
 
-        self.assertEqual(result["measurements"]["bpd"]["unit"], "px")
-        self.assertEqual(result["measurements"]["ha"]["unit"], "px2")
-        self.assertTrue(
-            any("Absolute millimeter values need image calibration" in note for note in result["notes"]),
-            msg=result["notes"],
-        )
+        self.assertEqual(result["measurements"]["bpd"]["unit"], "mm")
+        self.assertEqual(result["measurements"]["ha"]["unit"], "mm2")
+        self.assertEqual(result["calibration"]["source"], "demo_default")
 
     def test_returns_warning_note_for_borderline_biometry_confidence(self) -> None:
         analyzer = UltrasoundAnalyzer()
